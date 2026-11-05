@@ -38,4 +38,13 @@ export const UPGRADES: UpgradeDef[] = [
     costGrowth: 1.35,
     effect: { kind: "perSecond", rate: 3 },
   },
+  {
+    id: "oak-canopy",
+    name: "Oak canopy",
+    description:
+      "An old oak leans over the patch, and every falling leaf feeds the moss.",
+    baseCost: 900,
+    costGrowth: 1.35,
+    effect: { kind: "perSecond", rate: 12 },
+  },
 ];

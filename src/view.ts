@@ -12,6 +12,7 @@ import { type UpgradeDef, UPGRADES } from "./upgrades.ts";
 // Input is reported through callbacks; the view never edits state itself.
 export type View = {
   render: (state: GameState) => void;
+  announce: (text: string) => void;
 };
 
 export const createView = (
@@ -35,6 +36,11 @@ export const createView = (
   const rateReadout = document.createElement("p");
   rateReadout.id = "production-rate";
 
+  const announcement = document.createElement("p");
+  announcement.id = "announcement";
+  announcement.setAttribute("aria-live", "polite");
+  announcement.classList.add("hint");
+
   const pressButton = document.createElement("button");
   pressButton.id = "press-button";
   pressButton.addEventListener("click", onPress);
@@ -54,7 +60,15 @@ export const createView = (
     rows.push(button, note);
   }
 
-  app.append(heading, image, pressButton, counter, rateReadout, ...rows);
+  app.append(
+    heading,
+    image,
+    pressButton,
+    counter,
+    rateReadout,
+    announcement,
+    ...rows,
+  );
 
   return {
     render: (state: GameState) => {
@@ -73,6 +87,9 @@ export const createView = (
           `Buy ${def.name.toLowerCase()} (${cost} spores) — owned ${owned}`;
         button.disabled = state.spores < cost;
       }
+    },
+    announce: (text: string) => {
+      announcement.textContent = text;
     },
   };
 };

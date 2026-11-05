@@ -47,7 +47,12 @@ export const createView = (
 
   const buyButtons = new Map<string, HTMLButtonElement>();
   const rows: HTMLElement[] = [];
+  const shopHeading = document.createElement("h2");
+  shopHeading.textContent = "Grow the terrarium";
   for (const def of UPGRADES) {
+    const card = document.createElement("div");
+    card.className = "upgrade";
+
     const button = document.createElement("button");
     button.id = `buy-${def.id}`;
     button.addEventListener("click", () => onBuy(def));
@@ -56,8 +61,13 @@ export const createView = (
     note.className = "hint";
     note.textContent = def.description;
 
+    const effect = document.createElement("p");
+    effect.className = "hint";
+    effect.id = `effect-${def.id}`;
+
+    card.append(button, note, effect);
     buyButtons.set(def.id, button);
-    rows.push(button, note);
+    rows.push(card);
   }
 
   // Floating feedback on press: a brief "+N" rising from the button.
@@ -82,6 +92,7 @@ export const createView = (
     counter,
     rateReadout,
     announcement,
+    shopHeading,
     ...rows,
   );
 
@@ -103,6 +114,12 @@ export const createView = (
         button.textContent =
           `Buy ${def.name.toLowerCase()} (${cost} spores) — owned ${owned}`;
         button.disabled = state.spores < cost;
+
+        const effect = document.getElementById(`effect-${def.id}`)!;
+        const rate = def.effect.kind === "perSecond"
+          ? `+${(def.effect.rate * owned).toFixed(1)} spores/s`
+          : `+${def.effect.bonus * owned} spores per press`;
+        effect.textContent = owned > 0 ? `Owned ${owned} — ${rate}` : "";
       }
     },
     announce: (text: string) => {

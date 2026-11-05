@@ -47,6 +47,23 @@
       color: #5b7463;
       margin: 0.15rem 0 1.2rem;
     }
+    .spore-float {
+      position: fixed;
+      color: #2f6f4f;
+      font-weight: 600;
+      pointer-events: none;
+      animation: spore-rise 0.8s ease-out forwards;
+    }
+    @keyframes spore-rise {
+      from {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+      }
+      to {
+        opacity: 0;
+        transform: translate(-50%, -180%);
+      }
+    }
     </style>
   </head>
   <body>

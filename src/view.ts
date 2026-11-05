@@ -60,6 +60,21 @@ export const createView = (
     rows.push(button, note);
   }
 
+  // Floating feedback on press: a brief "+N" rising from the button.
+  let latest: GameState | null = null;
+  const floatSpores = (): void => {
+    if (!latest) return;
+    const rect = pressButton.getBoundingClientRect();
+    const span = document.createElement("span");
+    span.className = "spore-float";
+    span.textContent = `+${sporesPerPress(latest)}`;
+    span.style.left = `${rect.left + rect.width / 2}px`;
+    span.style.top = `${rect.top}px`;
+    span.addEventListener("animationend", () => span.remove());
+    document.body.append(span);
+  };
+  pressButton.addEventListener("click", floatSpores);
+
   app.append(
     heading,
     image,
@@ -72,13 +87,15 @@ export const createView = (
 
   return {
     render: (state: GameState) => {
+      latest = state;
       counter.textContent = `${Math.floor(state.spores)} spores`;
       rateReadout.textContent = `Growth: ${
         sporesPerSecond(state).toFixed(1)
       } spores per second`;
-      pressButton.textContent = `Press the moss patch (+${
-        sporesPerPress(state)
-      } spore)`;
+      const press = sporesPerPress(state);
+      pressButton.textContent = `Press the moss patch (+${press} spore${
+        press === 1 ? "" : "s"
+      })`;
       for (const def of UPGRADES) {
         const button = buyButtons.get(def.id)!;
         const cost = costOf(def, state);

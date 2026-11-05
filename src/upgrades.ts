@@ -23,6 +23,14 @@ export const UPGRADES: UpgradeDef[] = [
     effect: { kind: "perSecond", rate: 0.5 },
   },
   {
+    id: "spring-drip",
+    name: "Spring drip",
+    description: "Cold water beads off a stone and feeds the moss below.",
+    baseCost: 45,
+    costGrowth: 1.35,
+    effect: { kind: "perSecond", rate: 1.5 },
+  },
+  {
     id: "sticky-fingers",
     name: "Sticky fingers",
     description: "Sap on your fingertips — every press carries more spores.",
@@ -39,6 +47,15 @@ export const UPGRADES: UpgradeDef[] = [
     effect: { kind: "perSecond", rate: 3 },
   },
   {
+    id: "beetle-patrol",
+    name: "Beetle patrol",
+    description:
+      "Little beetles turn fallen leaves into fresh, spore-rich soil.",
+    baseCost: 340,
+    costGrowth: 1.35,
+    effect: { kind: "perSecond", rate: 5 },
+  },
+  {
     id: "oak-canopy",
     name: "Oak canopy",
     description:
@@ -46,5 +63,23 @@ export const UPGRADES: UpgradeDef[] = [
     baseCost: 900,
     costGrowth: 1.35,
     effect: { kind: "perSecond", rate: 12 },
+  },
+  {
+    id: "scattering-flick",
+    name: "Scattering flick",
+    description:
+      "A practiced flick of the wrist scatters loose spores with every press.",
+    baseCost: 600,
+    costGrowth: 1.6,
+    effect: { kind: "perPress", bonus: 8 },
+  },
+  {
+    id: "rain-shower",
+    name: "Rain shower",
+    description:
+      "A warm shower passes over the canopy and washes the spores loose.",
+    baseCost: 3200,
+    costGrowth: 1.35,
+    effect: { kind: "perSecond", rate: 30 },
   },
 ];

@@ -32,5 +32,12 @@ pressButton.addEventListener("click", () => {
   renderCounter();
 });
 
+// Ambient growth: a breeze drifts 1 spore in every 3 seconds (about 0.33/s),
+// on top of manual pressing.
+setInterval(() => {
+  state.spores += 1;
+  renderCounter();
+}, 3000);
+
 renderCounter();
 app.append(heading, image, pressButton, counter);

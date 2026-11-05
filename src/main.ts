@@ -14,37 +14,54 @@ image.alt = "A teal tile with a cream circle";
 image.width = 96;
 image.height = 96;
 
-// Game state: the resource the player collects by pressing.
-const state = { spores: 0 };
+// Game state: the resource the player collects, plus owned upgrades.
+const state = { spores: 0, dampLogs: 0 };
+
+const AMBIENT_RATE = 1 / 3; // the breeze, in spores per second
+const DAMP_LOG_COST = 15;
+const DAMP_LOG_RATE = 0.5; // extra spores per second per damp log
+
+// Production: ambient drift plus one contribution per owned damp log.
+const sporesPerSecond = () => AMBIENT_RATE + state.dampLogs * DAMP_LOG_RATE;
 
 const counter = document.createElement("p");
 counter.id = "spore-counter";
-const renderCounter = () => {
-  counter.textContent = `${Math.floor(state.spores)} spores`;
-};
 
-// A button built in TypeScript with an identity and a click handler.
+const buyButton = document.createElement("button");
+buyButton.id = "buy-damp-log";
+buyButton.textContent = `Buy a damp log (${DAMP_LOG_COST} spores)`;
+buyButton.addEventListener("click", () => {
+  if (state.spores < DAMP_LOG_COST) return; // unaffordable purchases are prevented
+  state.spores -= DAMP_LOG_COST;
+  state.dampLogs += 1;
+  render();
+});
+
 const pressButton = document.createElement("button");
 pressButton.id = "press-button";
 pressButton.textContent = "Press me";
 pressButton.addEventListener("click", () => {
   state.spores += 1;
-  renderCounter();
+  render();
 });
 
-// Ambient growth accrues with elapsed time rather than per frame: the breeze
-// adds 1/3 spore per second no matter the display's frame rate.
+const render = () => {
+  counter.textContent = `${Math.floor(state.spores)} spores`;
+  buyButton.disabled = state.spores < DAMP_LOG_COST;
+};
+
+// Ambient growth and damp logs both accrue with elapsed time rather than
+// per frame, so growth depends on seconds elapsed, not frames counted.
 let lastTime = performance.now();
 
 const tick = (now: number) => {
   const elapsedSeconds = (now - lastTime) / 1000;
   lastTime = now;
-  state.spores += (1 / 3) * elapsedSeconds;
-  renderCounter();
+  state.spores += sporesPerSecond() * elapsedSeconds;
+  render();
   requestAnimationFrame(tick);
 };
 
+render();
+app.append(heading, image, pressButton, counter, buyButton);
 requestAnimationFrame(tick);
-
-renderCounter();
-app.append(heading, image, pressButton, counter);

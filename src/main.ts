@@ -15,42 +15,89 @@ image.width = 96;
 image.height = 96;
 
 // Game state: the resource the player collects, plus owned upgrades.
-const state = { spores: 0, dampLogs: 0 };
+const state = {
+  spores: 0,
+  dampLogs: 0,
+  stickyPads: 0,
+  fernPatches: 0,
+};
 
 const AMBIENT_RATE = 1 / 3; // the breeze, in spores per second
-const DAMP_LOG_COST = 15;
-const DAMP_LOG_RATE = 0.5; // extra spores per second per damp log
+const DAMP_LOG = { cost: 15, rate: 0.5 };
+const STICKY_PADS = { cost: 50, pressBonus: 1 };
+const FERN_PATCH = { cost: 120, rate: 3 };
 
-// Production: ambient drift plus one contribution per owned damp log.
-const sporesPerSecond = () => AMBIENT_RATE + state.dampLogs * DAMP_LOG_RATE;
+// Production: ambient drift plus each owned producer's contribution.
+const sporesPerSecond = () =>
+  AMBIENT_RATE +
+  state.dampLogs * DAMP_LOG.rate +
+  state.fernPatches * FERN_PATCH.rate;
+
+// Pressing: the base press plus one bonus spore per sticky pad.
+const sporesPerPress = () => 1 + state.stickyPads * STICKY_PADS.pressBonus;
 
 const counter = document.createElement("p");
 counter.id = "spore-counter";
 
-const buyButton = document.createElement("button");
-buyButton.id = "buy-damp-log";
-buyButton.textContent = `Buy a damp log (${DAMP_LOG_COST} spores)`;
-buyButton.addEventListener("click", () => {
-  if (state.spores < DAMP_LOG_COST) return; // unaffordable purchases are prevented
-  state.spores -= DAMP_LOG_COST;
-  state.dampLogs += 1;
-  render();
-});
+const rateReadout = document.createElement("p");
+rateReadout.id = "production-rate";
 
 const pressButton = document.createElement("button");
 pressButton.id = "press-button";
 pressButton.textContent = "Press me";
 pressButton.addEventListener("click", () => {
-  state.spores += 1;
+  state.spores += sporesPerPress();
+  render();
+});
+
+const dampLogButton = document.createElement("button");
+dampLogButton.id = "buy-damp-log";
+dampLogButton.textContent = `Buy a damp log (${DAMP_LOG.cost} spores) — +0.5/s`;
+dampLogButton.addEventListener("click", () => {
+  if (state.spores < DAMP_LOG.cost) return;
+  state.spores -= DAMP_LOG.cost;
+  state.dampLogs += 1;
+  render();
+});
+
+const stickyPadsButton = document.createElement("button");
+stickyPadsButton.id = "buy-sticky-pads";
+stickyPadsButton.textContent =
+  `Buy sticky pads (${STICKY_PADS.cost} spores) — +1/press`;
+stickyPadsButton.addEventListener("click", () => {
+  if (state.spores < STICKY_PADS.cost) return;
+  state.spores -= STICKY_PADS.cost;
+  state.stickyPads += 1;
+  render();
+});
+
+const fernPatchButton = document.createElement("button");
+fernPatchButton.id = "buy-fern-patch";
+fernPatchButton.textContent =
+  `Buy a fern patch (${FERN_PATCH.cost} spores) — +3/s`;
+fernPatchButton.addEventListener("click", () => {
+  if (state.spores < FERN_PATCH.cost) return;
+  state.spores -= FERN_PATCH.cost;
+  state.fernPatches += 1;
   render();
 });
 
 const render = () => {
   counter.textContent = `${Math.floor(state.spores)} spores`;
-  buyButton.disabled = state.spores < DAMP_LOG_COST;
+  rateReadout.textContent = `${sporesPerSecond().toFixed(1)} spores per second`;
+  pressButton.textContent = `Press the tile (+${sporesPerPress()} spore)`;
+  dampLogButton.textContent =
+    `Buy a damp log (${DAMP_LOG.cost} spores) — owned ${state.dampLogs}`;
+  stickyPadsButton.textContent =
+    `Buy sticky pads (${STICKY_PADS.cost} spores) — owned ${state.stickyPads}`;
+  fernPatchButton.textContent =
+    `Buy a fern patch (${FERN_PATCH.cost} spores) — owned ${state.fernPatches}`;
+  dampLogButton.disabled = state.spores < DAMP_LOG.cost;
+  stickyPadsButton.disabled = state.spores < STICKY_PADS.cost;
+  fernPatchButton.disabled = state.spores < FERN_PATCH.cost;
 };
 
-// Ambient growth and damp logs both accrue with elapsed time rather than
+// Ambient growth and owned producers accrue with elapsed time rather than
 // per frame, so growth depends on seconds elapsed, not frames counted.
 let lastTime = performance.now();
 
@@ -63,5 +110,14 @@ const tick = (now: number) => {
 };
 
 render();
-app.append(heading, image, pressButton, counter, buyButton);
+app.append(
+  heading,
+  image,
+  pressButton,
+  counter,
+  rateReadout,
+  dampLogButton,
+  stickyPadsButton,
+  fernPatchButton,
+);
 requestAnimationFrame(tick);

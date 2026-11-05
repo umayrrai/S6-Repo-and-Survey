@@ -23,9 +23,16 @@ const state = {
 };
 
 const AMBIENT_RATE = 1 / 3; // the breeze, in spores per second
-const DAMP_LOG = { cost: 15, rate: 0.5 };
-const STICKY_PADS = { cost: 50, pressBonus: 1 };
-const FERN_PATCH = { cost: 120, rate: 3 };
+const DAMP_LOG = { baseCost: 15, costGrowth: 1.35, rate: 0.5 };
+const STICKY_PADS = { baseCost: 50, costGrowth: 1.6, pressBonus: 1 };
+const FERN_PATCH = { baseCost: 120, costGrowth: 1.35, rate: 3 };
+
+// Each repeat of an upgrade costs more than the last, so early purchases
+// shape how long later ones take to reach.
+const costFor = (
+  upgrade: { baseCost: number; costGrowth: number },
+  owned: number,
+) => Math.ceil(upgrade.baseCost * upgrade.costGrowth ** owned);
 
 // Production: ambient drift plus each owned producer's contribution.
 const sporesPerSecond = () =>
@@ -44,7 +51,6 @@ rateReadout.id = "production-rate";
 
 const pressButton = document.createElement("button");
 pressButton.id = "press-button";
-pressButton.textContent = "Press me";
 pressButton.addEventListener("click", () => {
   state.spores += sporesPerPress();
   render();
@@ -52,32 +58,30 @@ pressButton.addEventListener("click", () => {
 
 const dampLogButton = document.createElement("button");
 dampLogButton.id = "buy-damp-log";
-dampLogButton.textContent = `Buy a damp log (${DAMP_LOG.cost} spores) — +0.5/s`;
 dampLogButton.addEventListener("click", () => {
-  if (state.spores < DAMP_LOG.cost) return;
-  state.spores -= DAMP_LOG.cost;
+  const cost = costFor(DAMP_LOG, state.dampLogs);
+  if (state.spores < cost) return;
+  state.spores -= cost;
   state.dampLogs += 1;
   render();
 });
 
 const stickyPadsButton = document.createElement("button");
 stickyPadsButton.id = "buy-sticky-pads";
-stickyPadsButton.textContent =
-  `Buy sticky pads (${STICKY_PADS.cost} spores) — +1/press`;
 stickyPadsButton.addEventListener("click", () => {
-  if (state.spores < STICKY_PADS.cost) return;
-  state.spores -= STICKY_PADS.cost;
+  const cost = costFor(STICKY_PADS, state.stickyPads);
+  if (state.spores < cost) return;
+  state.spores -= cost;
   state.stickyPads += 1;
   render();
 });
 
 const fernPatchButton = document.createElement("button");
 fernPatchButton.id = "buy-fern-patch";
-fernPatchButton.textContent =
-  `Buy a fern patch (${FERN_PATCH.cost} spores) — +3/s`;
 fernPatchButton.addEventListener("click", () => {
-  if (state.spores < FERN_PATCH.cost) return;
-  state.spores -= FERN_PATCH.cost;
+  const cost = costFor(FERN_PATCH, state.fernPatches);
+  if (state.spores < cost) return;
+  state.spores -= cost;
   state.fernPatches += 1;
   render();
 });
@@ -86,15 +90,18 @@ const render = () => {
   counter.textContent = `${Math.floor(state.spores)} spores`;
   rateReadout.textContent = `${sporesPerSecond().toFixed(1)} spores per second`;
   pressButton.textContent = `Press the tile (+${sporesPerPress()} spore)`;
+  const dampLogCost = costFor(DAMP_LOG, state.dampLogs);
   dampLogButton.textContent =
-    `Buy a damp log (${DAMP_LOG.cost} spores) — owned ${state.dampLogs}`;
+    `Buy a damp log (${dampLogCost} spores) — owned ${state.dampLogs}`;
+  dampLogButton.disabled = state.spores < dampLogCost;
+  const stickyPadsCost = costFor(STICKY_PADS, state.stickyPads);
   stickyPadsButton.textContent =
-    `Buy sticky pads (${STICKY_PADS.cost} spores) — owned ${state.stickyPads}`;
+    `Buy sticky pads (${stickyPadsCost} spores) — owned ${state.stickyPads}`;
+  stickyPadsButton.disabled = state.spores < stickyPadsCost;
+  const fernPatchCost = costFor(FERN_PATCH, state.fernPatches);
   fernPatchButton.textContent =
-    `Buy a fern patch (${FERN_PATCH.cost} spores) — owned ${state.fernPatches}`;
-  dampLogButton.disabled = state.spores < DAMP_LOG.cost;
-  stickyPadsButton.disabled = state.spores < STICKY_PADS.cost;
-  fernPatchButton.disabled = state.spores < FERN_PATCH.cost;
+    `Buy a fern patch (${fernPatchCost} spores) — owned ${state.fernPatches}`;
+  fernPatchButton.disabled = state.spores < fernPatchCost;
 };
 
 // Ambient growth and owned producers accrue with elapsed time rather than
